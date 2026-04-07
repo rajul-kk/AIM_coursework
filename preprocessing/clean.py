@@ -13,12 +13,19 @@ def load_and_preprocess_data(file_path):
     Returns:
         X_train, X_test, y_train, y_test: Processed splits.
     """
+    empty_result = (None, None, None, None, None, None)
     print(f"Loading data from {file_path}...")
     try:
         df = pd.read_csv(file_path)
     except Exception as e:
         print(f"Error loading data: {e}")
-        return None, None, None, None
+        return empty_result
+
+    # If a CSV is still an LFS pointer file, fail fast with an actionable message.
+    if len(df.columns) == 1 and str(df.columns[0]).strip().lower().startswith('version https://git-lfs.github.com/spec/v1'):
+        print("Error: This dataset file is a Git LFS pointer, not the real CSV.")
+        print("Run: git lfs pull origin main")
+        return empty_result
 
     # 1. Clean column names
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.lower()
@@ -31,7 +38,7 @@ def load_and_preprocess_data(file_path):
     target_col = 'label'
     if target_col not in df.columns:
          print(f"Error: Target column '{target_col}' not found. Available columns: {df.columns.tolist()[:5]}...")
-         return None, None, None, None
+            return empty_result
 
     y = df[target_col]
     X = df.drop(columns=[target_col])

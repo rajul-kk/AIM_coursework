@@ -39,38 +39,32 @@ def evaluate_solution(particle, X_train, y_train, X_val, y_val):
         n_jobs=-1
     )
     
-    start_fit = time.time()
     rf.fit(X_train_filtered, y_train)
-    fit_time = time.time() - start_fit
-
-    start_pred = time.time()
     y_pred = rf.predict(X_val_filtered)
-    pred_time = time.time() - start_pred
-    
+
     acc = accuracy_score(y_val, y_pred)
+    
     selected_count = np.sum(feature_mask)
 
     cm = confusion_matrix(y_val, y_pred)
     if cm.shape == (2, 2):
         tn, fp, fn, tp = cm.ravel()
         fp_rate = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+        recall_attack = tp / (tp + fn) if (tp + fn) > 0 else 0.0
     else:
         # Multi-class fallback: total false positives over all predictions.
         total_fp = (cm.sum(axis=0) - np.diag(cm)).sum()
         fp_rate = total_fp / cm.sum() if cm.sum() > 0 else 0.0
+        recall_attack = recall_score(y_val, y_pred, average='weighted', zero_division=0)
 
     feature_reduction = 1.0 - (selected_count / num_features)
 
-    # Keep runtime penalty bounded to [0, 1] for stable optimization pressure.
-    total_runtime = fit_time + pred_time
-    runtime_penalty = min(total_runtime, 2.0) / 2.0
-
-    # Maximize score by rewarding accuracy/reduction/low-FPR/low-runtime.
+    # Security-first score for IDS optimization (runtime term removed).
     score = (
-        0.55 * acc +
-        0.20 * feature_reduction +
-        0.15 * (1.0 - fp_rate) +
-        0.10 * (1.0 - runtime_penalty)
+        0.35 * recall_attack +
+        0.30 * (1.0 - fp_rate) +
+        0.20 * acc +
+        0.15 * feature_reduction
     )
 
     # Cost minimized by GA/PSO/GWO.

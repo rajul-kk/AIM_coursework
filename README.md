@@ -82,6 +82,28 @@ The workflow includes:
 - Record package versions from requirements.txt
 - Run all experiments on the same dataset split when comparing optimizers
 
+## Troubleshooting
+
+### CSV Loads But 'label' Column Is Missing
+
+If you see an error like:
+- `Error: Target column 'label' not found. Available columns: ['version https://git-lfs.github.com/spec/v1']...`
+- `ValueError: not enough values to unpack`
+
+your dataset files are likely Git LFS pointer files instead of the real CSV content.
+
+Fix:
+
+```powershell
+git lfs pull origin main
+```
+
+Optional check (first lines should show CSV headers, not LFS pointer text):
+
+```powershell
+Get-Content -Path "data/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv" -TotalCount 3
+```
+
 ## Author
 
 AIM coursework project
