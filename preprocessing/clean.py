@@ -37,8 +37,8 @@ def load_and_preprocess_data(file_path):
     # 3. Separate features and target
     target_col = 'label'
     if target_col not in df.columns:
-         print(f"Error: Target column '{target_col}' not found. Available columns: {df.columns.tolist()[:5]}...")
-            return empty_result
+           print(f"Error: Target column '{target_col}' not found. Available columns: {df.columns.tolist()[:5]}...")
+           return empty_result
 
     y = df[target_col]
     X = df.drop(columns=[target_col])
