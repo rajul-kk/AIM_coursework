@@ -18,15 +18,23 @@ The optimizers perform joint feature selection and hyperparameter tuning on CICI
 
 The project currently uses CICIDS2017 CSV files under:
 - data/MachineLearningCVE/
-- data/TrafficLabelling/
 
-Default run target in the notebook/script:
-- Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv
+Current evaluation mode:
+- Uses all CSVs in data/MachineLearningCVE/
+- Concatenates full cleaned data first
+- Randomly samples 15% from the full concatenated set
+- Creates a stratified train/test split
+- Saves split files to data/combined_ml_15pct/
+
+How the 15% is computed:
+- Let N be the total number of cleaned rows after all MachineLearningCVE CSVs are concatenated
+- The sampled dataset size is 0.15 x N (global sample, not 15% per file)
+- With fixed random_state=42, the sampled rows are reproducible across runs unless force_rebuild is enabled
+- The sampled dataset is then split into train/test using stratification on the binary label
 
 ## Project Structure
 
 - Eval.ipynb: Main experiment notebook (full analysis + plots)
-- Eval.py: Script-style version of notebook workflow
 - requirements.txt: Python dependencies
 - preprocessing/clean.py: Data loading and preprocessing
 - core/baseline.py: Baseline model training/evaluation
@@ -53,12 +61,13 @@ pip install -r requirements.txt
 Option A: Notebook (recommended)
 
 1) Open Eval.ipynb
-2) Run cells from top to bottom
+2) Run cells from top to bottom (the notebook will auto-build/load sampled split files under data/combined_ml_15pct/)
 3) Review metrics table and visualizations
-
-Option B: Script
-
-python Eval.py
+ 
+The notebook auto-builds/loads:
+- data/combined_ml_15pct/train_sampled.csv
+- data/combined_ml_15pct/test_sampled.csv
+- data/combined_ml_15pct/split_stats.csv
 
 ## Evaluation Outputs
 
@@ -72,7 +81,7 @@ The workflow includes:
 
 ## Notes
 
-- Optimization settings (agents/iterations) are configurable in Eval.ipynb and Eval.py.
+- Optimization settings (agents/iterations) are configurable in Eval.ipynb.
 - Higher settings generally improve search quality but increase runtime.
 - Results can vary with dataset split and optimizer stochastic behavior.
 
