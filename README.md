@@ -1,118 +1,92 @@
 # Metaheuristic IDS Optimization (AIM Coursework)
 
-This project evaluates an Intrusion Detection System (IDS) pipeline using:
+This project evaluates an Intrusion Detection System (IDS) pipeline using a baseline Random Forest and six metaheuristic variants. The optimizers perform joint feature selection alongside hyperparameter tuning (`n_estimators`, `max_depth`, `min_samples_split`) on the CICIDS2017 network traffic dataset.
+
+### Evaluated Models
 - Baseline Random Forest (all features)
 - Genetic Algorithm (GA) + Random Forest
 - Particle Swarm Optimization (PSO) + Random Forest
 - Grey Wolf Optimizer (GWO) + Random Forest
+- Adaptive GWO + Random Forest
+- GA-PSO Hybrid + Random Forest
+- NSGA-III + Random Forest
 
-The optimizers perform joint feature selection and hyperparameter tuning on CICIDS2017 traffic data.
-
-## Project Goals
-
-- Build a reproducible IDS evaluation workflow in Python
-- Compare baseline vs optimized models using detection quality and efficiency metrics
-- Analyze feature reduction impact and optimizer behavior over iterations
+## Key Findings
+- **Highest Accuracy & Balanced Recall:** NSGA-III + RF provides the strongest multi-objective balance, yielding high attack recall with a compact feature set, making it highly viable for general SOC deployment.
+- **Strict False Positive Minimization:** Baseline Random Forest consistently suppresses the highest number of false alarms, functioning best in environments aiming to avoid alert fatigue.
+- **Fastest Computational Runtime:** PSO + RF offers the lowest latency for both training and inference.
 
 ## Dataset
 
-The project currently uses CICIDS2017 CSV files under:
-- data/MachineLearningCVE/
+The project uses standard CICIDS2017 CSV files located under:
+- `data/MachineLearningCVE/`
 
-Current evaluation mode:
-- Uses all CSVs in data/MachineLearningCVE/
-- Concatenates full cleaned data first
-- Randomly samples 15% from the full concatenated set
-- Creates a stratified train/test split
-- Saves split files to data/combined_ml_15pct/
-
-How the 15% is computed:
-- Let N be the total number of cleaned rows after all MachineLearningCVE CSVs are concatenated
-- The sampled dataset size is 0.15 x N (global sample, not 15% per file)
-- With fixed random_state=42, the sampled rows are reproducible across runs unless force_rebuild is enabled
-- The sampled dataset is then split into train/test using stratification on the binary label
+**Pipeline Execution:**
+- The workflow concatenates the full cleaned data first, standardizing column headers.
+- It randomly samples 15% from the full concatenated dataset (reproducible via a fixed `random_state=42`).
+- It extracts a robust stratified train/test split.
+- Compiled split files are saved to `data/combined_ml_15pct/` for persistence across optimization runs.
 
 ## Project Structure
 
-- Eval.ipynb: Main experiment notebook (full analysis + plots)
-- requirements.txt: Python dependencies
-- preprocessing/clean.py: Data loading and preprocessing
-- core/baseline.py: Baseline model training/evaluation
-- core/fitness.py: Optimization objective and final model evaluation
-- optimizers/ga.py: Genetic Algorithm optimizer
-- optimizers/pso.py: Particle Swarm optimizer
-- optimizers/gwo.py: Grey Wolf optimizer
+- `Eval.ipynb`: Main experiment notebook containing the full execution pipeline and visualizations.
+- `requirements.txt`: Python package dependencies.
+- `preprocessing/clean.py`: Data loading, standardization, and stratified splitting logic.
+- `core/baseline.py`: Baseline model training and performance evaluation.
+- `core/fitness.py`: Optimization objective function and final model evaluation metrics.
+- `optimizers/ga.py`: Genetic Algorithm (GA).
+- `optimizers/pso.py`: Particle Swarm Optimization (PSO).
+- `optimizers/gwo.py`: Grey Wolf Optimizer (GWO).
+- `optimizers/adaptive_gwo.py`: Dynamic parameter Adaptive GWO.
+- `optimizers/gapso.py`: Hybridized GA and PSO strategy.
+- `optimizers/nsga3.py`: Non-dominated Sorting Genetic Algorithm III (NSGA-III).
 
 ## Installation
 
-1) Create and activate a virtual environment (recommended)
-
-Windows PowerShell:
-
+1) Create and activate a virtual environment (recommended):
+```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+```
 
-2) Install dependencies
-
+2) Install dependencies:
+```powershell
 pip install -r requirements.txt
+```
 
 ## How To Run
 
-Option A: Notebook (recommended)
+**Option A: Notebook (Recommended)**
+1. Open `Eval.ipynb`.
+2. Run the cells from top to bottom. The notebook will automatically build/load the sampled split files under `data/combined_ml_15pct/`.
+3. Review the metrics table, feature allocations, and visualizations.
 
-1) Open Eval.ipynb
-2) Run cells from top to bottom (the notebook will auto-build/load sampled split files under data/combined_ml_15pct/)
-3) Review metrics table and visualizations
- 
-The notebook auto-builds/loads:
-- data/combined_ml_15pct/train_sampled.csv
-- data/combined_ml_15pct/test_sampled.csv
-- data/combined_ml_15pct/split_stats.csv
-
-## Evaluation Outputs
-
-The workflow includes:
+**Provided Evaluation Outputs:**
 - Classification metrics (Accuracy, Precision, Recall, F1)
-- False positives and false negatives comparisons
-- Training and testing time comparisons
-- Feature-selection overlap and importance analysis
-- Optimizer convergence trends
-- Prediction score distribution plots (histogram + KDE)
-
-## Notes
-
-- Optimization settings (agents/iterations) are configurable in Eval.ipynb.
-- Higher settings generally improve search quality but increase runtime.
-- Results can vary with dataset split and optimizer stochastic behavior.
+- Operations errors (False Positives and False Negatives counts)
+- Latency (Training and Testing time comparisons)
+- Feature-selection overlap and dimensional importance.
+- Normalized optimizer convergence trajectory graphing.
 
 ## Reproducibility Tips
-
-- Keep random_state fixed where possible
-- Record package versions from requirements.txt
-- Run all experiments on the same dataset split when comparing optimizers
+- Optimization settings (agents/iterations) are highly configurable in `Eval.ipynb`. Higher iterations improve convergence tracking but noticeably increase compute overhead.
+- Keep `random_state` fixed where possible to strictly mirror the paper's reported outputs.
+- Run all algorithm comparisons sequentially on the exact same dataset split to prevent sample-variance skew.
 
 ## Troubleshooting
 
 ### CSV Loads But 'label' Column Is Missing
+If you see an error ending in: `Error: Target column 'label' not found.` or `ValueError: not enough values to unpack`, your dataset files are likely Git LFS pointer files instead of the real CSV data.
 
-If you see an error like:
-- `Error: Target column 'label' not found. Available columns: ['version https://git-lfs.github.com/spec/v1']...`
-- `ValueError: not enough values to unpack`
-
-your dataset files are likely Git LFS pointer files instead of the real CSV content.
-
-Fix:
-
+**Fix:**
+Run the following inside your terminal to pull the raw binary sets:
 ```powershell
 git lfs pull origin main
 ```
 
-Optional check (first lines should show CSV headers, not LFS pointer text):
-
-```powershell
-Get-Content -Path "data/MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv" -TotalCount 3
-```
-
-## Author
-
-AIM coursework project
+## Authors
+**AIM Coursework Project**
+University of Nottingham Malaysia
+- Rajul Kabir 
+- Imitaz Naufal 
+- Babacar Sene
