@@ -21,6 +21,11 @@ This project evaluates an Intrusion Detection System (IDS) pipeline using a base
 The project uses standard CICIDS2017 CSV files located under:
 - `data/MachineLearningCVE/`
 
+**Manual Dataset Acquisition:**
+If the dataset was not bundled with your local copy of the repository due to file-size constraints:
+1. Download the `MachineLearningCVE.zip` file from the official [Canadian Institute for Cybersecurity (UNB) website](https://www.unb.ca/cic/datasets/ids-2017.html) or from the Kaggle CICIDS2017 mirror.
+2. Extract the archive and place all raw CSV files directly into the `data/MachineLearningCVE/` directory.
+
 **Pipeline Execution:**
 - The workflow concatenates the full cleaned data first, standardizing column headers.
 - It randomly samples 15% from the full concatenated dataset (reproducible via a fixed `random_state=42`).
