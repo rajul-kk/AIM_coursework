@@ -61,6 +61,8 @@ pip install -r requirements.txt
 2. Run the cells from top to bottom. The notebook will automatically build/load the sampled split files under `data/combined_ml_15pct/`.
 3. Review the metrics table, feature allocations, and visualizations.
 
+> **Estimated Runtime:** Executing the full notebook from scratch runs six distinct metaheuristic optimizers sequentially. Depending on your CPU, this end-to-end evaluation typically takes approximately **10–30 minutes** to complete.
+
 **Provided Evaluation Outputs:**
 - Classification metrics (Accuracy, Precision, Recall, F1)
 - Operations errors (False Positives and False Negatives counts)
